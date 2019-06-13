@@ -1,12 +1,13 @@
-from TrainDataGenerator.TFRecordsMaker.base_maker import BaseMaker
+from TrainDataGenerator.TFRecordsMaker.base_maker \
+    import BaseMaker, SwitchableWriter
 
 import numpy as np
 import tensorflow as tf
 
 
 class RegressionMaker(BaseMaker):
-    def __init__(self, save_dir: str):
-        super(RegressionMaker, self).__init__(save_dir)
+    def __init__(self, writer: SwitchableWriter):
+        super(RegressionMaker, self).__init__(writer)
 
     def write(self, image_array: np.array, score: float):
         features = \

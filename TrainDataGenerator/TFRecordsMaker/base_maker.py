@@ -4,8 +4,8 @@ import tensorflow as tf
 
 
 class BaseMaker:
-    def __init__(self, save_dir: str):
-        self.writer = SwitchableWriter(save_dir)
+    def __init__(self, writer: SwitchableWriter):
+        self.writer = writer
 
     def _write(self, features: tf.train.Features):
         example = tf.train.Example(features=features)

@@ -2,20 +2,28 @@ from tkinter import Tk
 from ImageEnhancer.util import get_image_enhancer
 from ScoredParamIO.scored_param_reader import get_scored_param_list
 from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
-    import get_dataset_save_dir, SwitchableTFRecordsWriter
+    import get_dataset_save_dir
 from argparse import ArgumentParser
+
+from TrainDataGenerator.TFRecordsMaker.switchable_writer \
+    import SwitchableWriter
+from TrainDataGenerator.ScoredParamToTFRecordsConverter.conpare \
+    import convert as compare_convert
+from TrainDataGenerator.ScoredParamToTFRecordsConverter.regression \
+    import convert as regression_convert
+
+COMPARE = 'compare'
+REGRESSION = 'regression'
 
 
 def _get_args():
     parser = ArgumentParser()
-    parser.add_argument('model_type')
+    parser.add_argument('model_type', choices=[COMPARE, REGRESSION])
 
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-
-
     args = _get_args()
 
     root = Tk()
@@ -30,14 +38,13 @@ if __name__ == "__main__":
     save_file_dir = get_dataset_save_dir()
     root.destroy()
 
-    train_rate, valid_rate, test_rate = 0.7, 0.2, 0.1
+    rate_dict = \
+        dict(zip(SwitchableWriter.DATASET_TYPE_LIST, [0.7, 0.2, 0.1]))
 
-    scored_param_length = len(scored_param_list)
+    convert_func_dict = \
+        dict(zip([COMPARE, REGRESSION], [compare_convert, regression_convert]))
 
-    data_length = sum(range(scored_param_length-1))
-    train_data_length = data_length*train_rate
-    validation_data_length = data_length*(train_rate+valid_rate)
+    convert_func_dict[args.model_type](save_file_dir, image_enhancer,
+                                       scored_param_list, rate_dict)
 
-    writer = \
-        SwitchableTFRecordsWriter(
-            save_file_dir, train_data_length, validation_data_length)
+    print('--- complete ! ---')
