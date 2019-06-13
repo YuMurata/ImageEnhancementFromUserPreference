@@ -1,16 +1,14 @@
 from tkinter import Tk
 from ImageEnhancer.util import get_image_enhancer
 from ScoredParamIO.scored_param_reader import get_scored_param_list
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_save_dir
 from argparse import ArgumentParser
 
 from TrainDataGenerator.TFRecordsMaker.switchable_writer \
     import SwitchableWriter
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.conpare \
-    import convert as compare_convert
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.regression \
-    import convert as regression_convert
+from conpare import convert as compare_convert
+from regression import convert as regression_convert
 
 COMPARE = 'compare'
 REGRESSION = 'regression'

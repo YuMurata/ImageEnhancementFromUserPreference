@@ -1,6 +1,6 @@
 from PIL import Image
 from .enhance_definer import enhance_dict
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import IMAGE_HEIGHT, IMAGE_WIDTH
 
 

@@ -2,7 +2,7 @@ from tqdm import tqdm
 from tkinter import Tk
 import numpy as np
 
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_save_dir
 
 from ImageEnhancer.util import get_image_enhancer, ImageEnhancer

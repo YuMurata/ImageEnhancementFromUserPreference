@@ -5,7 +5,7 @@ import numpy as np
 from ImageEnhancer.util import get_image_enhancer, ImageEnhancer
 from ScoredParamIO.scored_param_reader import get_scored_param_list
 
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_save_dir
 
 from random import randint
