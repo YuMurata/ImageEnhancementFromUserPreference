@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from pathlib import Path
 
 from UserPreferencePredictor.Model.Compare.model_builder \
@@ -8,48 +8,60 @@ from UserPreferencePredictor.Model.Compare.model_builder \
 
 class TrainableModel(ModelBuilder):
     def __init__(self, batch_size: int, summary_dir: str,
-                 is_tensor_verbose=False):
+                 is_tensor_verbose=False, is_use_jupyter=False):
         super(TrainableModel, self).__init__(batch_size, is_tensor_verbose)
 
         self.summary_writer = \
             tf.summary.FileWriter(summary_dir, self.sess.graph)
 
+        self.is_use_jupyter = is_use_jupyter
+
     def initialize_variable(self):
         super(TrainableModel, self).initialize_metrics()
         self.sess.run(self.global_variables_init_op)
 
-    def fit(self, train_dataset_path: str, epoch_num: int) -> dict:
-        print('--- train ---')
-
+    def _batch_train(self, progress: tqdm):
         fetch_list = [self.train_op, self.train_metrics_update,
                       self.loss_op, self.merged_summary,
                       tf.train.get_global_step(self.sess.graph)]
-        for epoch in tqdm(range(epoch_num), desc='epoch'):
+
+        try:
+            while True:
+                _, _, loss, summary, global_step = \
+                    self.sess.run(fetch_list,
+                                  feed_dict={
+                                      self.dropout_placeholder: 0.5
+                                  })
+
+                info_list = [('loss', loss)]
+                info_list.extend([(key, self.sess.run(value))
+                                  for key, value
+                                  in self.train_metrics_dict.items()])
+
+                if progress is not None:
+                    progress.update()
+                    progress.set_postfix(info_list)
+
+                self.summary_writer.add_summary(
+                    summary, global_step=global_step)
+
+        except tf.errors.OutOfRangeError:
+            return loss
+
+    def fit(self, train_dataset_path: str, epoch_num: int) -> dict:
+        print('--- train ---')
+
+        for epoch in trange(epoch_num, desc='epoch'):
             self.sess.run(
                 self.train_dataset.init_op,
                 feed_dict={
                     self.train_dataset.file_path_placeholder:
                     [train_dataset_path]})
-            with tqdm(desc='batch') as pbar:
-                try:
-                    while True:
-                        _, _, loss, summary, global_step = \
-                            self.sess.run(fetch_list,
-                                          feed_dict={
-                                              self.dropout_placeholder: 0.5
-                                          })
-                        pbar.update()
-                        info_list = [('loss', loss)]
-                        info_list.extend([(key, self.sess.run(value))
-                                          for key, value
-                                          in self.train_metrics_dict.items()])
-                        pbar.set_postfix(info_list)
 
-                        self.summary_writer.add_summary(
-                            summary, global_step=global_step)
-
-                except tf.errors.OutOfRangeError:
-                    pass
+            progress = tqdm(desc='batch') if not self.is_use_jupyter else None
+            loss = self._batch_train(progress)
+            if progress is not None:
+                progress.close()
 
         print('\n')
         ret_metrics = {key: self.sess.run(value)

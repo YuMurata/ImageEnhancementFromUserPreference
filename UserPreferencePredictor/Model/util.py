@@ -1,7 +1,7 @@
 from tkinter import filedialog, messagebox
 from datetime import datetime
 from pathlib import Path
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import TRAINDATA_PATH
 
 from UserPreferencePredictor.Model.Compare.trainable_model \
@@ -14,7 +14,7 @@ from UserPreferencePredictor.Model.Regression.trainable_model \
 from UserPreferencePredictor.Model.Regression.predictable_model \
     import PredictableModel as regression_predictable
 
-from enum import Enum, auto
+from argparse import ArgumentParser
 
 
 def make_summary_dir():
@@ -40,10 +40,10 @@ def get_load_dir(model_type=None):
     base_model_name = 'モデル'
     model_type_name = ''
 
-    if model_type is ModelType.COMPARE:
+    if model_type is COMPARE:
         model_type_name = '比較'
 
-    if model_type is ModelType.REGRESSION:
+    if model_type is REGRESSION:
         model_type_name = '回帰'
 
     dialog_title = '学習済みの%sをロードするフォルダを選択してください' \
@@ -58,32 +58,34 @@ def get_load_dir(model_type=None):
     return load_dir
 
 
-class ModelType(Enum):
-    COMPARE = auto()
-    REGRESSION = auto()
+COMPARE, REGRESSION = 'compare', 'regression'
+MODEL_TYPE_LIST = (COMPARE, REGRESSION)
 
-
-class UseType(Enum):
-    TRAINABLE = auto()
-    PREDICTABLE = auto()
-
+TRAINABLE, PREDICTABLE = 'trainable', 'predictable'
+USE_TYPE_LIST = (TRAINABLE, PREDICTABLE)
 
 COMPARE_MODEL_BUILDER_DICT = \
-    dict(zip(list(UseType),
+    dict(zip(USE_TYPE_LIST,
              [compare_trainable,  compare_predictable]))
 
 REGRESSION_BUILDER_DICT = \
-    dict(zip(list(UseType),
+    dict(zip(USE_TYPE_LIST,
              [regression_trainable,  regression_predictable]))
 
 MODEL_BUILDER_DICT = \
-    dict(zip(list(ModelType),
+    dict(zip(MODEL_TYPE_LIST,
              [COMPARE_MODEL_BUILDER_DICT, REGRESSION_BUILDER_DICT]))
 
 
 def select_model_type():
     is_use_compare = messagebox.askyesno('modelの選択', 'はいなら比較、いいえなら回帰')
 
-    model_type = ModelType.COMPARE if is_use_compare else ModelType.REGRESSION
+    model_type = COMPARE if is_use_compare else REGRESSION
 
     return model_type
+
+
+def set_model_type_args(parser: ArgumentParser):
+    parser.add_argument('model_type', choices=MODEL_TYPE_LIST)
+
+    return parser

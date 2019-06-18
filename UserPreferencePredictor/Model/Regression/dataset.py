@@ -1,5 +1,5 @@
 import tensorflow as tf
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import IMAGE_CHANNEL, IMAGE_HEIGHT, IMAGE_WIDTH
 
 

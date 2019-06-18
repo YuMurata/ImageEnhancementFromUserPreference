@@ -8,7 +8,6 @@ from ScoredParamIO.scored_param_reader import get_scored_param_list
 from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_save_dir
 
-from random import randint
 
 from TrainDataGenerator.TFRecordsMaker.switchable_writer \
     import AutoSwitchableWriter
@@ -19,18 +18,29 @@ def _make_label(left_score: float, right_score: float):
     if left_score > right_score:
         return 0
 
-    if right_score > left_score:
+    elif right_score > left_score:
         return 1
 
-    if left_score == right_score:
-        return randint(0, 1)
+    else:
+        raise ValueError('score is same')
 
 
 def convert(save_file_dir: str, image_enhancer: ImageEnhancer,
             scored_param_list: list, rate_dict: dict):
     scored_param_length = len(scored_param_list)
 
-    data_length = sum(range(scored_param_length))
+    data_length = 0
+
+    for left_index in range(0, scored_param_length-1):
+        for right_index in range(left_index+1, scored_param_length):
+            left_param = scored_param_list[left_index]
+            right_param = scored_param_list[right_index]
+
+            left_score = scored_param_list[left_index]['score']
+            right_score = scored_param_list[right_index]['score']
+
+            if left_score != right_score:
+                data_length += 1
 
     writer = AutoSwitchableWriter(save_file_dir, rate_dict, data_length)
     compare_maker = CompareMaker(writer)
@@ -47,13 +57,15 @@ def convert(save_file_dir: str, image_enhancer: ImageEnhancer,
             left_array = np.asarray(left_image)
             right_array = np.asarray(right_image)
 
-            left_score = scored_param_list[left_index]['score']
-            right_score = scored_param_list[right_index]['score']
+            left_score = left_param['score']
+            right_score = right_param['score']
 
-            label = _make_label(left_score, right_score)
-
-            compare_maker.write(left_array, right_array, label)
-            progress.update()
+            try:
+                label = _make_label(left_score, right_score)
+                compare_maker.write(left_array, right_array, label)
+                progress.update()
+            except ValueError:
+                pass
 
 
 if __name__ == "__main__":

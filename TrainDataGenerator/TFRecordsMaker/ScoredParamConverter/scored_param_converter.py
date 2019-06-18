@@ -3,26 +3,15 @@ from ImageEnhancer.util import get_image_enhancer
 from ScoredParamIO.scored_param_reader import get_scored_param_list
 from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_save_dir
-from argparse import ArgumentParser
 
-from TrainDataGenerator.TFRecordsMaker.switchable_writer \
-    import SwitchableWriter
+from TrainDataGenerator.TFRecordsMaker.util import DATASET_TYPE_LIST
 from conpare import convert as compare_convert
 from regression import convert as regression_convert
-
-COMPARE = 'compare'
-REGRESSION = 'regression'
-
-
-def _get_args():
-    parser = ArgumentParser()
-    parser.add_argument('model_type', choices=[COMPARE, REGRESSION])
-
-    return parser.parse_args()
-
+from UserPreferencePredictor.Model.util \
+    import set_model_type_args, MODEL_TYPE_LIST, ArgumentParser
 
 if __name__ == "__main__":
-    args = _get_args()
+    args = set_model_type_args(ArgumentParser()).parse_args()
 
     root = Tk()
     root.withdraw()
@@ -37,10 +26,10 @@ if __name__ == "__main__":
     root.destroy()
 
     rate_dict = \
-        dict(zip(SwitchableWriter.DATASET_TYPE_LIST, [0.7, 0.2, 0.1]))
+        dict(zip(DATASET_TYPE_LIST, [0.7, 0.2, 0.1]))
 
     convert_func_dict = \
-        dict(zip([COMPARE, REGRESSION], [compare_convert, regression_convert]))
+        dict(zip(MODEL_TYPE_LIST, [compare_convert, regression_convert]))
 
     convert_func_dict[args.model_type](save_file_dir, image_enhancer,
                                        scored_param_list, rate_dict)

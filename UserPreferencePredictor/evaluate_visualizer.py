@@ -4,9 +4,9 @@ from tkinter import Tk, LEFT, Frame, Label, LabelFrame
 from ImageEnhancer.util import get_image_enhancer
 
 from UserPreferencePredictor.Model.util \
-    import select_model_type, get_load_dir, MODEL_BUILDER_DICT, UseType
+    import get_load_dir, MODEL_BUILDER_DICT, PREDICTABLE, \
+    set_model_type_args, ArgumentParser
 from ScoredParamIO.scored_param_reader import get_scored_param_list
-
 
 class EvaluatedCanvasFrame(Frame):
     def __init__(self, master: Frame, canvas_width: int,
@@ -20,6 +20,8 @@ class EvaluatedCanvasFrame(Frame):
 
 
 if __name__ == "__main__":
+    args = set_model_type_args(ArgumentParser()).parse_args()
+
     root = Tk()
     root.attributes('-topmost', True)
 
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     root.lift()
     root.focus_force()
 
-    model_type = select_model_type()
+    model_type = args.model_type
 
     try:
         load_dir = get_load_dir(model_type)
@@ -35,7 +37,7 @@ if __name__ == "__main__":
         print('ロード用フォルダが選択されなかったため終了します')
         exit()
 
-    predict_model = MODEL_BUILDER_DICT[model_type][UseType.PREDICTABLE]()
+    predict_model = MODEL_BUILDER_DICT[model_type][PREDICTABLE]()
 
     try:
         predict_model.restore(load_dir)
@@ -55,7 +57,6 @@ if __name__ == "__main__":
     ]
 
     evaluate_list = predict_model.predict_evaluate(data_list).tolist()
-    print(evaluate_list)
 
     for i in range(len(data_list)):
         data_list[i]['evaluate'] = evaluate_list[i][0]

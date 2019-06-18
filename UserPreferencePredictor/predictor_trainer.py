@@ -2,17 +2,24 @@ import tkinter as tk
 
 from pprint import pprint
 
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import make_dataset_path_dict, TRAIN, VALIDATION
 
 from UserPreferencePredictor.Model.util \
     import make_summary_dir, get_load_dir, \
-    MODEL_BUILDER_DICT, select_model_type, UseType, ModelType
+    MODEL_BUILDER_DICT, set_model_type_args, COMPARE, TRAINABLE, ArgumentParser
 
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from JupyterUtil.args import set_use_jupyter_args
+
+from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_dir
 
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser = set_model_type_args(parser)
+    parser = set_use_jupyter_args(parser)
+    args = parser.parse_args()
+
     root = tk.Tk()
     root.attributes('-topmost', True)
 
@@ -20,7 +27,7 @@ if __name__ == "__main__":
     root.lift()
     root.focus_force()
 
-    model_type = select_model_type()
+    model_type = args.model_type
 
     try:
         summary_dir = make_summary_dir()
@@ -28,9 +35,10 @@ if __name__ == "__main__":
         print('summary用フォルダが選択されなかったため終了します')
         exit()
 
-    batch_size = 100 if model_type == ModelType.COMPARE else 10
-    model_builder = MODEL_BUILDER_DICT[model_type][UseType.TRAINABLE]
-    trainable_model = model_builder(batch_size, summary_dir)
+    batch_size = 100 if model_type == COMPARE else 10
+    model_builder = MODEL_BUILDER_DICT[model_type][TRAINABLE]
+    trainable_model = \
+        model_builder(batch_size, summary_dir, is_use_jupyter=args.jupyter)
 
     try:
         load_dir = get_load_dir(model_type)

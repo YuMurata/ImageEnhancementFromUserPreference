@@ -3,7 +3,8 @@ from deap import base, creator, tools, algorithms
 from UserPreferencePredictor.Model.Compare.predictable_model \
     import PredictableModel
 from UserPreferencePredictor.Model.util \
-    import get_load_dir, select_model_type, UseType, MODEL_BUILDER_DICT
+    import get_load_dir, MODEL_BUILDER_DICT, set_model_type_args, \
+    ArgumentParser, PREDICTABLE
 
 from ImageEnhancer.util import get_image_enhancer, ImageEnhancer
 from ImageEnhancer.enhance_definer import enhance_name_list
@@ -66,8 +67,9 @@ class SelectableCanvasFrame(Frame):
 
 
 def _init_model():
-    model_type = select_model_type()
-    model = MODEL_BUILDER_DICT[model_type][UseType.PREDICTABLE]()
+    args = set_model_type_args(ArgumentParser()).parse_args()
+    model_type = args.model_type
+    model = MODEL_BUILDER_DICT[model_type][PREDICTABLE]()
 
     try:
         load_dir = get_load_dir(model_type)

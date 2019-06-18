@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from gauss import make_gauss_graph_variable
 from mpl_toolkits.mplot3d import Axes3D
-
+from ScoredParamIO.scored_param_reader import get_scored_param_list
 
 def scatter_graph(param_file_list: list, figure: plt.Figure):
     for param_index, param_file in enumerate(param_file_list):
@@ -62,14 +62,8 @@ if __name__ == "__main__":
     root.lift()
     root.focus_force()
 
-    param_file_list = \
-        filedialog.askopenfiles(
-            'r', title='select scored_param data as csv',
-            filetypes=[('scored param', ['.csv'])])
+    scored_param_list = get_scored_param_list()
     root.destroy()
-
-    if not param_file_list:
-        exit()
 
     scored_param_list_dict = {}
 
@@ -78,4 +72,4 @@ if __name__ == "__main__":
     color_list = ['red', 'blue', 'green', 'yellow']
 
     #gauss_graph(param_file_list, figure)
-    scatter_graph(param_file_list, figure)
+    scatter_graph(scored_param_list, figure)

@@ -2,7 +2,7 @@ from tkinter import Tk
 import tensorflow as tf
 from pathlib import Path
 
-from TrainDataGenerator.ScoredParamToTFRecordsConverter.util \
+from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_dir, DATASET_TYPE_LIST, EXTENSION
 
 
