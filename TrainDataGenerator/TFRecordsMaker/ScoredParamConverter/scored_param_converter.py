@@ -1,6 +1,6 @@
 from tkinter import Tk
-from ImageEnhancer.util import get_image_enhancer
-from ScoredParamIO.scored_param_reader import get_scored_param_list
+from ImageEnhancer.image_enhancer import ImageEnhancer
+from ScoredParamIO.scored_param_reader import format_scored_param_file_list
 from TrainDataGenerator.TFRecordsMaker.util \
     import get_dataset_save_dir
 
@@ -9,21 +9,32 @@ from conpare import convert as compare_convert
 from regression import convert as regression_convert
 from UserPreferencePredictor.Model.util \
     import set_model_type_args, MODEL_TYPE_LIST, ArgumentParser
+from pathlib import Path
+
+
+def _get_args():
+    parser = ArgumentParser()
+
+    parser.add_argument('-d', '--dataset_dir_path', required=True)
+    parser.add_argument('-p', '--param_paths', nargs='*', required=True)
+    parser.add_argument('-i', '--image_path')
+    parser.add_argument('-t', '--model_type', choices=MODEL_TYPE_LIST,
+                        required=True)
+
+    args = parser.parse_args()
+
+    for arg in vars(args):
+        print(f'{str(arg)}: {str(getattr(args, arg))}')
+
+    return args
+
 
 if __name__ == "__main__":
-    args = set_model_type_args(ArgumentParser()).parse_args()
+    args = _get_args()
+    image_enhancer = ImageEnhancer(args.image_path)
+    scored_param_list = format_scored_param_file_list(args.param_paths)
 
-    root = Tk()
-    root.withdraw()
-
-    root.attributes('-topmost', True)
-    root.lift()
-    root.focus_force()
-
-    image_enhancer = get_image_enhancer()
-    scored_param_list = get_scored_param_list()
-    save_file_dir = get_dataset_save_dir()
-    root.destroy()
+    assert Path(args.dataset_dir_path).is_dir()
 
     rate_dict = \
         dict(zip(DATASET_TYPE_LIST, [0.7, 0.2, 0.1]))
@@ -31,7 +42,7 @@ if __name__ == "__main__":
     convert_func_dict = \
         dict(zip(MODEL_TYPE_LIST, [compare_convert, regression_convert]))
 
-    convert_func_dict[args.model_type](save_file_dir, image_enhancer,
+    convert_func_dict[args.model_type](args.dataset_dir_path, image_enhancer,
                                        scored_param_list, rate_dict)
 
     print('--- complete ! ---')

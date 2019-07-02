@@ -1,12 +1,14 @@
 from GUI.image_canvas_frame import ImageCanvas
 from tkinter import Tk, LEFT, Frame, Label, LabelFrame
 
-from ImageEnhancer.util import get_image_enhancer
+from ImageEnhancer.image_enhancer import ImageEnhancer
 
 from UserPreferencePredictor.Model.util \
-    import get_load_dir, MODEL_BUILDER_DICT, PREDICTABLE, \
-    set_model_type_args, ArgumentParser
-from ScoredParamIO.scored_param_reader import get_scored_param_list
+    import MODEL_BUILDER_DICT, PREDICTABLE, MODEL_TYPE_LIST
+from ScoredParamIO.scored_param_reader import read_scored_param
+
+from argparse import ArgumentParser
+import tensorflow as tf
 
 class EvaluatedCanvasFrame(Frame):
     def __init__(self, master: Frame, canvas_width: int,
@@ -19,42 +21,42 @@ class EvaluatedCanvasFrame(Frame):
         Label(self, text='evaluate: %.2f' % (evaluate)).pack()
 
 
+def _get_args():
+    parser = ArgumentParser()
+
+    parser.add_argument('-l', '--load_dir_path', required=True)
+    parser.add_argument('-i', '--image_path', required=True)
+    parser.add_argument('-p', '--param_file_path', required=True)
+    parser.add_argument('-t', '--model_type', choices=MODEL_TYPE_LIST,
+                        required=True)
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    args = set_model_type_args(ArgumentParser()).parse_args()
+    args = _get_args()
 
-    root = Tk()
-    root.attributes('-topmost', True)
-
-    root.withdraw()
-    root.lift()
-    root.focus_force()
+    for arg in vars(args):
+        print(f'{str(arg)}: {str(getattr(args, arg))}')
 
     model_type = args.model_type
 
-    try:
-        load_dir = get_load_dir(model_type)
-    except FileNotFoundError:
-        print('ロード用フォルダが選択されなかったため終了します')
-        exit()
-
-    predict_model = MODEL_BUILDER_DICT[model_type][PREDICTABLE]()
+    predict_model = MODEL_BUILDER_DICT[model_type][PREDICTABLE](tf.Graph())
 
     try:
-        predict_model.restore(load_dir)
+        predict_model.restore(args.load_dir_path)
     except ValueError:
         print('ロードができなかったため終了します')
         exit()
 
-    image_enhancer = get_image_enhancer()
+    image_enhancer = ImageEnhancer(args.image_path)
 
-    scored_param_list = get_scored_param_list()
+    scored_param_list = read_scored_param(args.param_file_path)
 
-    data_list = [
-        {
-            'image': image_enhancer.org_enhance(scored_param),
+    data_list = \
+        [{'image': image_enhancer.org_enhance(scored_param),
             'score': scored_param['score']}
-        for scored_param in scored_param_list
-    ]
+         for scored_param in scored_param_list]
 
     evaluate_list = predict_model.predict_evaluate(data_list).tolist()
 
@@ -67,7 +69,7 @@ if __name__ == "__main__":
     high_scored_data_list = \
         sorted(data_list, key=lambda x: x['score'], reverse=True)
 
-    root.deiconify()
+    root = Tk()
     root.attributes('-topmost', True)
 
     disp_num = 4
@@ -75,9 +77,9 @@ if __name__ == "__main__":
     high_predict_frame = LabelFrame(root, text='predict')
     for predicted_data in high_predicted_data_list[:disp_num]:
         frame = \
-            EvaluatedCanvasFrame(
-                high_predict_frame, 300, 300, predicted_data['score'],
-                predicted_data['evaluate'])
+            EvaluatedCanvasFrame(high_predict_frame, 300, 300,
+                                 predicted_data['score'],
+                                 predicted_data['evaluate'])
         frame.pack(side=LEFT)
         frame.canvas.update_image(predicted_data['image'])
     high_predict_frame.pack(pady=10)
@@ -85,9 +87,8 @@ if __name__ == "__main__":
     high_score_frame = LabelFrame(root, text='score')
     for scored_data in high_scored_data_list[:disp_num]:
         frame = \
-            EvaluatedCanvasFrame(
-                high_score_frame, 300, 300, scored_data['score'],
-                scored_data['evaluate'])
+            EvaluatedCanvasFrame(high_score_frame, 300, 300,
+                                 scored_data['score'], scored_data['evaluate'])
         frame.pack(side=LEFT)
         frame.canvas.update_image(scored_data['image'])
     high_score_frame.pack(pady=10)
