@@ -3,8 +3,8 @@ import csv
 
 
 def write_scored_param(scored_param_dict_list: list):
-    save_list = [scored_param['param']
-                 for scored_param in scored_param_dict_list]
+    save_list = \
+        [scored_param['param'] for scored_param in scored_param_dict_list]
     for i in range(len(save_list)):
         save_list[i]['score'] = scored_param_dict_list[i]['score']
 

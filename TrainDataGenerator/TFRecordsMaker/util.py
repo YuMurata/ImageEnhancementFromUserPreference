@@ -37,8 +37,12 @@ def get_dataset_save_dir():
     return dataset_dir
 
 
-def make_dataset_path_dict(dataset_dir: str):
+def make_dataset_path_dict(dataset_dir_path: str):
+    dataset_dir_path = Path(dataset_dir_path)
+
+    assert dataset_dir_path.exists()
+
     dataset_path_dict = \
-        {key: str(Path(dataset_dir)/(key+EXTENSION))
+        {key: str(dataset_dir_path/(key+EXTENSION))
          for key in DATASET_TYPE_LIST}
     return dataset_path_dict

@@ -17,25 +17,6 @@ from UserPreferencePredictor.Model.Regression.predictable_model \
 from argparse import ArgumentParser
 
 
-def make_summary_dir():
-    save_dir = \
-        filedialog.askdirectory(
-            title='学習結果を保存するフォルダを選択してください', initialdir=TRAINDATA_PATH)
-
-    if not save_dir:
-        raise FileNotFoundError('フォルダが選択されませんでした')
-
-    now = datetime.now()
-    path = Path(save_dir)/'{0:%m%d}'.format(now)/'{0:%H%M}'.format(now)
-
-    if path.exists():
-        path = Path(str(path.parent)+'_{0:%S}'.format(now))
-
-    path.mkdir(parents=True)
-
-    return str(path)
-
-
 def get_load_dir(model_type=None):
     base_model_name = 'モデル'
     model_type_name = ''

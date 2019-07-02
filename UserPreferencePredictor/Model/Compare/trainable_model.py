@@ -7,9 +7,14 @@ from UserPreferencePredictor.Model.Compare.model_builder \
 
 
 class TrainableModel(ModelBuilder):
-    def __init__(self, batch_size: int, summary_dir: str,
+    def __init__(self, batch_size: int, summary_dir: str, graph=None,
                  is_tensor_verbose=False, is_use_jupyter=False):
-        super(TrainableModel, self).__init__(batch_size, is_tensor_verbose)
+
+        if graph is None:
+            graph = tf.get_default_graph()
+
+        super(TrainableModel, self).__init__(
+            batch_size, graph, is_tensor_verbose)
 
         self.summary_writer = \
             tf.summary.FileWriter(summary_dir, self.sess.graph)
@@ -18,7 +23,7 @@ class TrainableModel(ModelBuilder):
 
     def initialize_variable(self):
         super(TrainableModel, self).initialize_metrics()
-        self.sess.run(self.global_variables_init_op)
+        self.sess.run(self.variables_init_op)
 
     def _batch_train(self, progress: tqdm):
         fetch_list = [self.train_op, self.train_metrics_update,

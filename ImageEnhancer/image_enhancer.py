@@ -1,12 +1,19 @@
 from PIL import Image
-from .enhance_definer import enhance_dict
+from enhance_definer import enhance_dict
 from TrainDataGenerator.TFRecordsMaker.util \
     import IMAGE_HEIGHT, IMAGE_WIDTH
+
+
+class ImageEnhancerException(Exception):
+    pass
 
 
 class ImageEnhancer:
     def __init__(self, image_path: str):
         self.org_image = Image.open(image_path).convert('RGB')
+        if self.org_enhance is None:
+            raise ImageEnhancerException('image not found')
+
         self.resize_image = self.org_image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
 
     def _enhance(self, image_parameter: dict, image: Image.Image) \
@@ -41,8 +48,7 @@ def plot_compare_image(left_image, right_image):
 
 
 if __name__ == "__main__":
-    import os
-    print()
-    ie = ImageEnhancer(os.path.join(os.path.dirname(__file__), 'img_16.jpg'))
-    plot_compare_image(ie.enhance(
-        {'brightness': 1.5}), ie.enhance({'brightness': 0.5}))
+    from pathlib import Path
+    ie = ImageEnhancer(str(Path(__file__).parent/'test.jpg'))
+    plot_compare_image(ie.org_enhance(
+        {'brightness': 10}), ie.org_enhance({'brightness': 0.5}))

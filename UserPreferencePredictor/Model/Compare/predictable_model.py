@@ -1,10 +1,12 @@
 from UserPreferencePredictor.Model.Compare.model_builder \
-    import ModelBuilder
+    import ModelBuilder, tf
 
 
 class PredictableModel(ModelBuilder):
-    def __init__(self, is_tensor_verbose=False):
-        super(PredictableModel, self).__init__(0, is_tensor_verbose)
+    def __init__(self, graph=None, is_tensor_verbose=False):
+        if graph is None:
+            graph = tf.get_default_graph()
+        super(PredictableModel, self).__init__(0, graph, is_tensor_verbose)
 
     def predict_evaluate(self, data_list: list):
         feed_dict = {

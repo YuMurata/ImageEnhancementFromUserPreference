@@ -4,10 +4,12 @@ from TrainDataGenerator.TFRecordsMaker.util \
 
 
 class TrainDataset:
+    SCOPE = 'train_data_set'
+
     def __init__(self, graph: tf.Graph, batch_size: int):
         self.batch_size = batch_size
         with graph.as_default():
-            with tf.variable_scope('train_data_set'):
+            with tf.variable_scope(TrainDataset.SCOPE):
                 self.file_path_placeholder = \
                     tf.placeholder(tf.string, shape=[None], name='file_path')
 

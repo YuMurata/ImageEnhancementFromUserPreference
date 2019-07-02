@@ -1,20 +1,26 @@
-import csv
-import tkinter
-from tkinter import filedialog
-
 import matplotlib.pyplot as plt
 import numpy as np
 from gauss import make_gauss_graph_variable
 from mpl_toolkits.mplot3d import Axes3D
-from ScoredParamIO.scored_param_reader import get_scored_param_list
 
-def scatter_graph(param_file_list: list, figure: plt.Figure):
-    for param_index, param_file in enumerate(param_file_list):
-        read_dict = csv.DictReader(param_file, delimiter=",", quotechar='"')
-        key_list = read_dict.fieldnames
+from argparse import ArgumentParser
+import csv
 
-        dict_list = [dict(zip(row.keys(), map(float, row.values())))
-                     for row in read_dict]
+
+def scatter_graph(param_file_path_list: list, figure: plt.Figure):
+    color_list = ['red', 'blue', 'green', 'yellow']
+
+    for index, path in enumerate(param_file_path_list):
+        with open(path) as param_file:
+            read_dict = \
+                csv.DictReader(param_file, delimiter=",", quotechar='"')
+
+            key_list = read_dict.fieldnames
+
+            dict_list = \
+                [dict(zip(row.keys(), map(float, row.values())))
+                for row in read_dict]
+
         score_list = [item['score'] for item in dict_list]
 
         for key in key_list:
@@ -29,7 +35,7 @@ def scatter_graph(param_file_list: list, figure: plt.Figure):
 
             ax_dict[key].scatter(
                 np.array(item_list), np.array(score_list),
-                c=color_list[param_index], label='実験%i' % (param_index+1))
+                c=color_list[index], label='実験%i' % (index+1))
 
     plt.show()
 
@@ -45,7 +51,7 @@ def gauss_graph(param_file_list: list, figure: plt.Figure):
 
         X, Y, Z, label_list = make_gauss_graph_variable(dict_list)
 
-        ax = figure.add_subplot(1, 1, param_index+1, projection='3d')
+        ax = Axes3D(figure)
         ax.set_xlabel(label_list[0], size=16)
         ax.set_ylabel(label_list[1], size=16)
         ax.set_zlabel(label_list[2], size=16)
@@ -54,22 +60,28 @@ def gauss_graph(param_file_list: list, figure: plt.Figure):
     plt.show()
 
 
+SCATTER = 'scatter'
+GAUSS = 'gauss'
+GRAPH_TYPE_LIST = [SCATTER, GAUSS]
+
+
+def _get_args():
+    parser = ArgumentParser()
+    parser.add_argument('-p', '--param_paths', nargs='*', required=True)
+    parser.add_argument('-g', '--graph_type',
+                        choices=GRAPH_TYPE_LIST, required=True)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    root = tkinter.Tk()
-    root.attributes('-topmost', True)
-
-    root.withdraw()
-    root.lift()
-    root.focus_force()
-
-    scored_param_list = get_scored_param_list()
-    root.destroy()
-
-    scored_param_list_dict = {}
+    args = _get_args()
+    for arg in vars(args):
+        print(f'{str(arg)}: {str(getattr(args, arg))}')
 
     figure = plt.figure(figsize=(8, 8))
     ax_dict = {}
-    color_list = ['red', 'blue', 'green', 'yellow']
 
-    #gauss_graph(param_file_list, figure)
-    scatter_graph(scored_param_list, figure)
+    if args.graph_type == SCATTER:
+        scatter_graph(args.param_paths, figure)
+    else:
+        gauss_graph(args.param_paths, figure)
