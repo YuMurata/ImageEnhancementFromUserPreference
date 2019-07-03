@@ -144,54 +144,53 @@ class ModelBuilder:
         return metrics_dict, entire_update_op
 
     def _build_model(self):
-        with tf.variable_scope('model'):
-            with tf.variable_scope('placeholder'):
-                self.dropout_placeholder = tf.placeholder(tf.float32)
+        with tf.variable_scope('placeholder'):
+            self.dropout_placeholder = tf.placeholder(tf.float32)
 
-            with tf.variable_scope('evaluate_network'):
-                if self.is_tensor_verbose:
-                    print('left')
-                with tf.variable_scope('left_network'):
-                    self.left_evaluate_net = \
-                        self._build_evaluate_network(
-                            self.train_dataset.left_image)
+        with tf.variable_scope('evaluate_network'):
+            if self.is_tensor_verbose:
+                print('left')
+            with tf.variable_scope('left_network'):
+                self.left_evaluate_net = \
+                    self._build_evaluate_network(
+                        self.train_dataset.left_image)
 
-                if self.is_tensor_verbose:
-                    print('right')
-                with tf.variable_scope('right_network'):
-                    right_evaluate_net = \
-                        self._build_evaluate_network(
-                            self.train_dataset.right_image)
+            if self.is_tensor_verbose:
+                print('right')
+            with tf.variable_scope('right_network'):
+                right_evaluate_net = \
+                    self._build_evaluate_network(
+                        self.train_dataset.right_image)
 
-            with tf.variable_scope('evaluate'):
-                left_evaluate = \
-                    tf.reduce_sum(
-                        self.left_evaluate_net, axis=1, name='left_evaluate')
-                right_evaluate = \
-                    tf.reduce_sum(
-                        right_evaluate_net, axis=1, name='right_evaluate')
-                stacked_evaluate = \
-                    tf.stack(
-                        [left_evaluate, right_evaluate], axis=1,
-                        name='stacked_evaluate')
+        with tf.variable_scope('evaluate'):
+            left_evaluate = \
+                tf.reduce_sum(
+                    self.left_evaluate_net, axis=1, name='left_evaluate')
+            right_evaluate = \
+                tf.reduce_sum(
+                    right_evaluate_net, axis=1, name='right_evaluate')
+            stacked_evaluate = \
+                tf.stack(
+                    [left_evaluate, right_evaluate], axis=1,
+                    name='stacked_evaluate')
 
-            with tf.variable_scope('loss_function'):
-                self._build_loss_func(stacked_evaluate)
+        with tf.variable_scope('loss_function'):
+            self._build_loss_func(stacked_evaluate)
 
-            with tf.variable_scope('metrics'):
-                if self.is_tensor_verbose:
-                    print('train')
-                with tf.variable_scope('train_metrics'):
-                    self.train_metrics_dict, self.train_metrics_update = \
-                        self._build_metrics(stacked_evaluate)
-                    for key, value in self.train_metrics_dict.items():
-                        tf.summary.scalar(key, value, family='metrics')
+        with tf.variable_scope('metrics'):
+            if self.is_tensor_verbose:
+                print('train')
+            with tf.variable_scope('train_metrics'):
+                self.train_metrics_dict, self.train_metrics_update = \
+                    self._build_metrics(stacked_evaluate)
+                for key, value in self.train_metrics_dict.items():
+                    tf.summary.scalar(key, value, family='metrics')
 
-                if self.is_tensor_verbose:
-                    print('test')
-                with tf.variable_scope('test_metrics'):
-                    self.test_metrics_dict, self.test_metrics_update = \
-                        self._build_metrics(stacked_evaluate)
+            if self.is_tensor_verbose:
+                print('test')
+            with tf.variable_scope('test_metrics'):
+                self.test_metrics_dict, self.test_metrics_update = \
+                    self._build_metrics(stacked_evaluate)
 
     def _image_to_array(self, image: Image):
         resized_image = image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
@@ -207,4 +206,5 @@ class ModelBuilder:
 
 if __name__ == '__main__':
     load_dir = str(Path(__file__).parent/'predict_model_test')
-    print(ModelBuilder(1, True).restore(load_dir))
+    graph = tf.Graph()
+    print(ModelBuilder(1, graph).restore(load_dir))

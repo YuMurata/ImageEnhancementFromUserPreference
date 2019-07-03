@@ -3,7 +3,7 @@ from ImageEnhancer.image_enhancer import ImageEnhancer
 from GUI.image_canvas_frame import ImageCanvas
 from random import gauss
 
-CANVAS_WIDTH, CANVAS_HEIGHT = 300, 300
+TARGET_WIDTH = 300
 
 
 class SelectableCanvasFrame(Frame):
@@ -12,7 +12,10 @@ class SelectableCanvasFrame(Frame):
 
         super(SelectableCanvasFrame, self).__init__(master)
 
-        self.canvas = ImageCanvas(self, CANVAS_WIDTH, CANVAS_HEIGHT)
+        target_height = \
+            int(TARGET_WIDTH/enhancer.org_width*enhancer.org_height)
+
+        self.canvas = ImageCanvas(self, TARGET_WIDTH, target_height)
         self.canvas.pack()
         Button(self, text='good', command=self._click_button).pack()
 

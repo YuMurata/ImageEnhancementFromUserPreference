@@ -7,12 +7,12 @@ from ScoredParamIO.scored_param_writer import write_scored_param
 from frame import KeyPressableFrame, CompareCanvasFrame
 from game import TournamentGame, GameWin
 
-from logging import getLogger, DEBUG, INFO
+from logging import getLogger, INFO
 
 
 class CompareCanvasGroupFrame(KeyPressableFrame):
     def __init__(self, master: Frame, image_enhancer: ImageEnhancer,
-                 game: TournamentGame):
+                 game: TournamentGame, save_file_path: str):
         super(CompareCanvasGroupFrame, self).__init__(master)
         self.canvas_width = 300
         self.canvas_height = 300
@@ -33,6 +33,8 @@ class CompareCanvasGroupFrame(KeyPressableFrame):
 
         self.image_enhancer = image_enhancer
         self.game = game
+        self.save_file_path = save_file_path
+
         self.select_num_value.set(f'残り選択回数: {self.game.get_match_num}')
 
         self.logger = getLogger('ComparaCanvas')
@@ -61,13 +63,8 @@ class CompareCanvasGroupFrame(KeyPressableFrame):
 
         self.is_left_press = True
         self.game.compete(GameWin.LEFT)
-        self.select_num_value.set(f'残り選択回数: {self.game.get_match_num}')
 
-        if self.game.is_complete:
-            write_scored_param(self.game.scored_player_list)
-            self.master.destroy()
-        else:
-            self.disp_enhanced_image()
+        self._select_any()
 
     def _select_right(self, e):
         self.logger.debug('press right')
@@ -78,12 +75,17 @@ class CompareCanvasGroupFrame(KeyPressableFrame):
         self.is_right_press = True
 
         self.game.compete(GameWin.RIGHT)
+
+        self._select_any()
+
+    def _select_any(self):
         self.select_num_value.set(f'残り選択回数: {self.game.get_match_num}')
         if self.game.is_complete:
-            write_scored_param(self.game.scored_player_list)
+            write_scored_param(self.game.scored_player_list, self.save_file_path)
             self.master.destroy()
         else:
             self.disp_enhanced_image()
+
 
     def _scored_tournament(self, selected_index: int):
         self.scored_param_list[selected_index]['score'] *= 2
@@ -108,7 +110,7 @@ class CompareCanvasGroupFrame(KeyPressableFrame):
             if len(self.current_image_parameter_index_list) == 0 and\
                     len(self.next_image_parameter_index_list) == 1:
                 print('tournament complete')
-                write_scored_param(self.scored_param_list)
+                write_scored_param(self.scored_param_list, self.save_file_path)
                 # self._write_scored_parameter_to_csv()
                 self.master.destroy()
                 return

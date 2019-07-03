@@ -1,8 +1,7 @@
-from tkinter import filedialog
 import csv
 
 
-def write_scored_param(scored_param_dict_list: list):
+def write_scored_param(scored_param_dict_list: list, save_file_path: str):
     save_list = \
         [scored_param['param'] for scored_param in scored_param_dict_list]
     for i in range(len(save_list)):
@@ -10,20 +9,13 @@ def write_scored_param(scored_param_dict_list: list):
 
     field_name_list = save_list[0].keys()
 
-    file_obj = filedialog.asksaveasfile(
-            title='save scored_param data as csv',
-            mode='w', defaultextension='.csv',
-            filetypes=[('scored param', '.csv')])
+    with open(save_file_path, 'w') as file_obj:
+        writer = csv.DictWriter(
+            file_obj, fieldnames=field_name_list, delimiter=",", quotechar='"')
+        writer.writeheader()
 
-    if file_obj is None:
-        return
-
-    writer = csv.DictWriter(
-        file_obj, fieldnames=field_name_list, delimiter=",", quotechar='"')
-    writer.writeheader()
-
-    for save_item in save_list:
-        writer.writerow(save_item)
+        for save_item in save_list:
+            writer.writerow(save_item)
 
 
 if __name__ == "__main__":

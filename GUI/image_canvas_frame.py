@@ -1,4 +1,4 @@
-from tkinter import ttk, Canvas, Tk, Frame
+from tkinter import Canvas, Tk, Frame
 from PIL import Image, ImageTk
 
 

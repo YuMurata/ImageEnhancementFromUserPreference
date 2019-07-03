@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from random import sample
-from logging import getLogger, DEBUG, INFO, ERROR
+from logging import getLogger, ERROR
 
 
 class GameException(Exception):

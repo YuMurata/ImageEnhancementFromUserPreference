@@ -10,6 +10,7 @@ from ScoredParamIO.scored_param_reader import read_scored_param
 from argparse import ArgumentParser
 import tensorflow as tf
 
+
 class EvaluatedCanvasFrame(Frame):
     def __init__(self, master: Frame, canvas_width: int,
                  canvas_height: int, score: float, evaluate: float):
@@ -74,10 +75,16 @@ if __name__ == "__main__":
 
     disp_num = 4
 
+    target_width = 300
+    target_height = \
+        int(target_width/image_enhancer.org_width*image_enhancer.org_height)
+
     high_predict_frame = LabelFrame(root, text='predict')
     for predicted_data in high_predicted_data_list[:disp_num]:
         frame = \
-            EvaluatedCanvasFrame(high_predict_frame, 300, 300,
+            EvaluatedCanvasFrame(high_predict_frame,
+                                 target_width,
+                                 target_height,
                                  predicted_data['score'],
                                  predicted_data['evaluate'])
         frame.pack(side=LEFT)
@@ -87,7 +94,9 @@ if __name__ == "__main__":
     high_score_frame = LabelFrame(root, text='score')
     for scored_data in high_scored_data_list[:disp_num]:
         frame = \
-            EvaluatedCanvasFrame(high_score_frame, 300, 300,
+            EvaluatedCanvasFrame(high_score_frame,
+                                 target_width,
+                                 target_height,
                                  scored_data['score'], scored_data['evaluate'])
         frame.pack(side=LEFT)
         frame.canvas.update_image(scored_data['image'])

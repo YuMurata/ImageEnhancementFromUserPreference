@@ -1,5 +1,5 @@
 from PIL import Image
-from enhance_definer import enhance_dict
+from ImageEnhancer.enhance_definer import enhance_dict
 from TrainDataGenerator.TFRecordsMaker.util \
     import IMAGE_HEIGHT, IMAGE_WIDTH
 
@@ -15,6 +15,7 @@ class ImageEnhancer:
             raise ImageEnhancerException('image not found')
 
         self.resize_image = self.org_image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
+        self.org_width, self.org_height = self.org_image.size
 
     def _enhance(self, image_parameter: dict, image: Image.Image) \
             -> Image.Image:
