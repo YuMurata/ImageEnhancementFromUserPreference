@@ -1,61 +1,57 @@
 import tensorflow as tf
 from TrainDataGenerator.TFRecordsMaker.util \
     import IMAGE_CHANNEL, IMAGE_HEIGHT, IMAGE_WIDTH
+from pathlib import Path
+
+SCOPE = 'ranknet_dataset'
 
 
-class TrainDataset:
-    SCOPE = 'train_data_set'
+def make_dataset(dataset_file_path: str, batch_size: int, name: str):
+    dataset_file_path = Path(dataset_file_path)
+    if not dataset_file_path.exists():
+        raise FileNotFoundError
 
-    def __init__(self, graph: tf.Graph, batch_size: int):
-        self.batch_size = batch_size
-        with graph.as_default():
-            with tf.variable_scope(TrainDataset.SCOPE):
-                self.file_path_placeholder = \
-                    tf.placeholder(tf.string, shape=[None], name='file_path')
-
-                dataset = self._make_dataset()
-
-                iterator = \
-                    tf.data.Iterator.from_structure(
-                        dataset.output_types, dataset.output_shapes)
-                self.left_image, self.right_image, self.label = \
-                    iterator.get_next()
-                self.init_op = iterator.make_initializer(dataset)
-
-    def _make_dataset(self):
+    with tf.name_scope(f'{name}_{SCOPE}'):
         dataset = \
-            tf.data.TFRecordDataset(self.file_path_placeholder) \
-            .map(self._parse_function) \
-            .map(self._read_image) \
-            .shuffle(self.batch_size) \
-            .batch(self.batch_size)
-        return dataset
+            tf.data.TFRecordDataset(str(dataset_file_path)) \
+            .map(_parse_function) \
+            .map(_read_image) \
+            .shuffle(batch_size) \
+            .batch(batch_size) \
+            .repeat()
 
-    def _parse_function(self, example_proto):
-        features = {
-            'label': tf.FixedLenFeature((), tf.int64, default_value=0),
-            'left_image': tf.FixedLenFeature((), tf.string, default_value=""),
-            'right_image': tf.FixedLenFeature((), tf.string, default_value=""),
-        }
-        parsed_features = tf.parse_single_example(example_proto, features)
+    return dataset
 
-        return parsed_features
 
-    def _read_image(self, parsed_features):
-        left_image_raw = \
-            tf.decode_raw(parsed_features['left_image'], tf.uint8)
-        right_image_raw =\
-            tf.decode_raw(parsed_features['right_image'], tf.uint8)
+def _parse_function(example_proto):
+    features = {
+        'label': tf.io.FixedLenFeature((), tf.int64,
+                                       default_value=0),
+        'left_image': tf.io.FixedLenFeature((), tf.string,
+                                            default_value=""),
+        'right_image': tf.io.FixedLenFeature((), tf.string,
+                                             default_value=""),
+    }
+    parsed_features = tf.io.parse_single_example(example_proto, features)
 
-        label = tf.cast(parsed_features['label'], tf.int32, name='label')
+    return parsed_features
 
-        float_left_image_raw = tf.cast(left_image_raw, tf.float32)/255
-        float_right_image_raw = tf.cast(right_image_raw, tf.float32)/255
 
-        shape = [IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL]
-        left_image = \
-            tf.reshape(float_left_image_raw, shape, name='left_image')
-        right_image = \
-            tf.reshape(float_right_image_raw, shape, name='right_image')
+def _read_image(parsed_features):
+    left_image_raw = \
+        tf.decode_raw(parsed_features['left_image'], tf.uint8)
+    right_image_raw =\
+        tf.decode_raw(parsed_features['right_image'], tf.uint8)
 
-        return left_image, right_image, label
+    label = tf.cast(parsed_features['label'], tf.int32, name='label')
+
+    float_left_image_raw = tf.cast(left_image_raw, tf.float32)/255
+    float_right_image_raw = tf.cast(right_image_raw, tf.float32)/255
+
+    shape = [IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL]
+    left_image = \
+        tf.reshape(float_left_image_raw, shape, name='left_image')
+    right_image = \
+        tf.reshape(float_right_image_raw, shape, name='right_image')
+
+    return ((left_image, right_image), label)
