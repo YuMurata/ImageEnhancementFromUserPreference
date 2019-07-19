@@ -60,6 +60,6 @@ if __name__ == "__main__":
                for key in [TRAIN, VALIDATION]}
 
     trainable_model.train(dataset[TRAIN], log_dir_path=log_dir_path,
-                          valid_dataset=dataset[VALIDATION], epochs=30)
+                          valid_dataset=dataset[VALIDATION], epochs=10)
 
     trainable_model.save(log_dir_path)

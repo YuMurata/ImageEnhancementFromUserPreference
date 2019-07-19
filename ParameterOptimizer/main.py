@@ -57,6 +57,7 @@ if __name__ == "__main__":
     optimizer = ParameterOptimizer(model, image_enhancer)
     best_param_list = optimizer.optimize()
 
+    print(best_param_list[0])
     _show_histogram(image_enhancer.org_enhance(best_param_list[0]))
     exit()
 

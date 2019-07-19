@@ -42,6 +42,8 @@ def _get_args():
 
 if __name__ == "__main__":
     args = _get_args()
+    print(_image_to_score(Image.open(args.image_path), (0, 0, 0)))
+    exit()
     if args.generate_num < 2:
         raise ValueError('生成数は2以上にしてください')
 

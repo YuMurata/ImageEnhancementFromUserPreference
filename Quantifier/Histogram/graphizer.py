@@ -63,4 +63,10 @@ if __name__ == "__main__":
         min_score_image.histogram(), 3))
     make_image_figure('min', min_score_image)
 
+    param = {key: 1 for key in min_score_param.keys()}
+    org_image = enhancer.org_enhance(param)
+    make_histogram_figure('original', np.array_split(
+        org_image.histogram(), 3))
+    make_image_figure('original', org_image)
+
     plt.show()

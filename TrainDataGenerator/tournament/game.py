@@ -44,8 +44,32 @@ class TournamentGame:
         self.logger.info(f'start {self.round_count}th round')
         self.logger.info(
             f'--- current player: {self.current_player_index_list} ---')
+        score_list = [player['score']
+                      for player in self.scored_player_list]
+        self.logger.info(f'--- score: {score_list} ---')
+
+    def _new_round(self):
+        if len(self.current_player_index_list) >= 2:
+            raise GameException
+
+        for index in self.current_player_index_list:
+            self.scored_player_list[index]['score'] *= 2
+
+        self.next_player_index_list.extend(self.current_player_index_list)
+        self.current_player_index_list = \
+            sample(self.next_player_index_list,
+                   len(self.next_player_index_list))
+        self.next_player_index_list.clear()
+
+        self.round_count += 1
+        self.match_count = 0
+
+        self.logger.info(f'start {self.round_count}th round')
         self.logger.info(
-            f'--- next player: {self.next_player_index_list} ---')
+            f'--- current player: {self.current_player_index_list} ---')
+        score_list = [player['score']
+                      for player in self.scored_player_list]
+        self.logger.info(f'--- score: {score_list} ---')
 
     def new_match(self):
         if self.is_match:
@@ -76,22 +100,8 @@ class TournamentGame:
             return left_player, right_player
 
         else:
-            self.logger.info(f'--- round complete ---')
-            self.next_player_index_list.extend(self.current_player_index_list)
-            self.current_player_index_list = \
-                sample(self.next_player_index_list,
-                       len(self.next_player_index_list))
-            self.next_player_index_list.clear()
-            self.round_count += 1
-            self.match_count = 0
-
-            self.logger.info(f'start {self.round_count}th round')
-            self.logger.info(
-                f'--- current player: {self.current_player_index_list} ---')
-            self.logger.info(
-                f'--- next player: {self.next_player_index_list} ---')
-
-        return self.new_match()
+            self._new_round()
+            return self.new_match()
 
     def compete(self, winner: GameWin):
         if not self.is_match:
@@ -100,12 +110,12 @@ class TournamentGame:
         if self.is_complete:
             raise GameException('game is already over')
 
-        if winner == GameWin.LEFT:
-            self.scored_player_list[self.left_player_index]['score'] *= 2
-            self.next_player_index_list.append(self.left_player_index)
-        else:
-            self.scored_player_list[self.right_player_index]['score'] *= 2
-            self.next_player_index_list.append(self.right_player_index)
+        winner_index = self.left_player_index \
+            if winner == GameWin.LEFT else \
+            self.right_player_index
+
+        self.scored_player_list[winner_index]['score'] *= 2
+        self.next_player_index_list.append(winner_index)
 
         self.logger.info(f'--- winner: {winner.name} ---')
         self.is_match = False

@@ -1,17 +1,13 @@
 from tqdm import tqdm
-from tkinter import Tk
 import numpy as np
 
-from ImageEnhancer.util import get_image_enhancer, ImageEnhancer
-from ScoredParamIO.scored_param_reader import get_scored_param_list
+from ImageEnhancer.image_enhancer import ImageEnhancer
+from ScoredParamIO.scored_param_reader import read_scored_param
 
-from TrainDataGenerator.TFRecordsMaker.util \
-    import get_dataset_save_dir
-
-
-from TrainDataGenerator.TFRecordsMaker.switchable_writer \
-    import AutoSwitchableWriter
 from TrainDataGenerator.TFRecordsMaker.compare_maker import CompareMaker
+import tensorflow as tf
+from argparse import ArgumentParser
+from pathlib import Path
 
 
 def _make_label(left_score: float, right_score: float):
@@ -25,8 +21,8 @@ def _make_label(left_score: float, right_score: float):
         raise ValueError('score is same')
 
 
-def convert(save_file_dir: str, image_enhancer: ImageEnhancer,
-            scored_param_list: list, rate_dict: dict):
+def convert(save_file_path: str, image_enhancer: ImageEnhancer,
+            scored_param_list: list):
     scored_param_length = len(scored_param_list)
 
     data_length = 0
@@ -42,7 +38,7 @@ def convert(save_file_dir: str, image_enhancer: ImageEnhancer,
             if left_score != right_score:
                 data_length += 1
 
-    writer = AutoSwitchableWriter(save_file_dir, rate_dict, data_length)
+    writer = tf.io.TFRecordWriter(save_file_path)
     compare_maker = CompareMaker(writer)
 
     progress = tqdm(total=data_length)
@@ -68,23 +64,43 @@ def convert(save_file_dir: str, image_enhancer: ImageEnhancer,
                 pass
 
 
+def _get_args():
+    parser = ArgumentParser()
+
+    parser.add_argument('-o', '--save_dir_path', required=True)
+    parser.add_argument('-i', '--image_path', required=True)
+    parser.add_argument('-t', '--train_param_path', required=True)
+    parser.add_argument('-v', '--validation_param_path', required=True)
+
+    args = parser.parse_args()
+
+    for arg in vars(args):
+        print(f'{str(arg)}: {str(getattr(args, arg))}')
+
+    return args
+
+
 if __name__ == "__main__":
-    root = Tk()
-    root.withdraw()
+    args = _get_args()
 
-    root.attributes('-topmost', True)
-    root.lift()
-    root.focus_force()
+    image_enhancer = ImageEnhancer(args.image_path)
 
-    image_enhancer = get_image_enhancer()
-    scored_param_list = get_scored_param_list()
-    save_file_dir = get_dataset_save_dir()
-    root.destroy()
+    dataset_type_list = ['train', 'validation']
 
-    rate_dict = \
-        dict(zip(AutoSwitchableWriter.DATASET_TYPE_LIST, [0.7, 0.2, 0.1]))
+    param_list_dict = {key: read_scored_param(param_file_path)
+                       for key, param_file_path
+                       in zip(dataset_type_list, (args.train_param_path,
+                                                  args.validation_param_path))}
 
-    convert(save_file_dir, image_enhancer, scored_param_list, rate_dict)
+    save_dir_path = Path(args.save_dir_path)
+    save_dir_path.mkdir(parents=True, exist_ok=True)
+
+    extension = '.tfrecords'
+    records_path_dict = {key: str(save_dir_path/(key+extension))
+                         for key in dataset_type_list}
+
+    for key in dataset_type_list:
+        convert(records_path_dict[key], image_enhancer, param_list_dict[key])
 
     print('\n')
 

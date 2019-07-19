@@ -81,7 +81,7 @@ class ParameterOptimizer:
 
         algorithms.eaSimple(
             pop, self.toolbox, cxpb=0.5, mutpb=0.2,
-            ngen=10, stats=stats, halloffame=hof)
+            ngen=300, stats=stats, halloffame=hof)
 
         param_list = [self._decode_to_param(ind) for ind in hof]
         param_list.extend([self._decode_to_param(ind) for ind in pop[:3]])
