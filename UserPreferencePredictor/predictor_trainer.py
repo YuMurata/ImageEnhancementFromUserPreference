@@ -1,13 +1,12 @@
-from pprint import pprint
 from TrainDataGenerator.TFRecordsMaker.util \
     import make_dataset_path_dict, TRAIN, VALIDATION
-from UserPreferencePredictor.Model.util \
-    import MODEL_BUILDER_DICT,  COMPARE, TRAINABLE, MODEL_TYPE_LIST
+from UserPreferencePredictor.Model.Compare.ranknet import RankNet
+from UserPreferencePredictor.Model.Compare.dataset import make_dataset
+from UserPreferencePredictor.Model.util import MODEL_TYPE_LIST, COMPARE
 from argparse import ArgumentParser
 
 from datetime import datetime
 from pathlib import Path
-import tensorflow as tf
 
 
 def _make_summary_dir(summary_dir_path: str):
@@ -46,35 +45,21 @@ if __name__ == "__main__":
     model_type = args.model_type
 
     batch_size = 100 if model_type == COMPARE else 10
-    model_builder = MODEL_BUILDER_DICT[model_type][TRAINABLE]
-    summary_dir_path = _make_summary_dir(args.summary_dir_path)
+    log_dir_path = _make_summary_dir(args.summary_dir_path)
 
-    trainable_model = \
-        model_builder(batch_size, summary_dir_path, tf.Graph(),
-                      is_use_jupyter=args.use_jupyter)
+    trainable_model = RankNet()
 
     if args.load_dir_path:
         try:
-            trainable_model.restore(args.load_dir_path)
+            trainable_model.load(args.load_dir_path)
         except ValueError:
-            trainable_model.initialize_variable()
-    else:
-        trainable_model.initialize_variable()
+            pass
 
     dataset_path_dict = make_dataset_path_dict(args.dataset_dir_path)
+    dataset = {key: make_dataset(dataset_path_dict[key], batch_size, key)
+               for key in [TRAIN, VALIDATION]}
 
-    epoch_num = 10
-    train_metrics = \
-        trainable_model.fit(dataset_path_dict[TRAIN], epoch_num)
+    trainable_model.train(dataset[TRAIN], log_dir_path=log_dir_path,
+                          valid_dataset=dataset[VALIDATION], epochs=30)
 
-    pprint(train_metrics)
-    print('')
-
-    trainable_model.save(summary_dir_path)
-
-    validation_metrics = \
-        trainable_model.inference(dataset_path_dict[VALIDATION])
-    pprint(validation_metrics)
-    print('')
-
-    print('--- complete ! ---')
+    trainable_model.save(log_dir_path)

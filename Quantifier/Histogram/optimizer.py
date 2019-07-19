@@ -1,7 +1,4 @@
 from deap import base, creator, tools, algorithms
-
-from UserPreferencePredictor.Model.Compare.ranknet import RankNet
-
 from ImageEnhancer.image_enhancer import ImageEnhancer
 from ImageEnhancer.enhance_definer import enhance_name_list
 import random
@@ -9,12 +6,17 @@ from statistics import mean, stdev
 import numpy as np
 from TrainDataGenerator.image_parameter_generator \
     import MIN_PARAM, MAX_PARAM
+from argparse import ArgumentParser
+from Quantifier.Histogram.param_maker import _image_to_score
+from functools import partial
+import matplotlib.pyplot as plt
+from Quantifier.Histogram.graphizer import _make_figure
 
 
 class ParameterOptimizer:
-    def __init__(self, model: RankNet, image_enhancer: ImageEnhancer):
+    def __init__(self, image_to_score, image_enhancer: ImageEnhancer):
         self.image_enhancer = image_enhancer
-        self.model = model
+        self.image_to_score = image_to_score
         self.toolbox = self._init_deap()
 
     def _decode_to_param(self, individual):
@@ -36,13 +38,7 @@ class ParameterOptimizer:
         param = self._decode_to_param(individual)
         image = self.image_enhancer.resized_enhance(param)
 
-        data = {'image': image}
-        predict_evaluate = self.model.predict([data]).tolist()[0][0]
-
-        mu = 1
-        variation_width = 0.5
-        sigma = variation_width/3
-        return predict_evaluate*random.gauss(mu, sigma),
+        return self.image_to_score(image),
 
     def _init_deap(self):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -81,8 +77,37 @@ class ParameterOptimizer:
 
         algorithms.eaSimple(
             pop, self.toolbox, cxpb=0.5, mutpb=0.2,
-            ngen=10, stats=stats, halloffame=hof)
+            ngen=100, stats=stats, halloffame=hof)
 
-        param_list = [self._decode_to_param(ind) for ind in hof]
-        param_list.extend([self._decode_to_param(ind) for ind in pop[:3]])
-        return param_list
+        return self._decode_to_param(hof[0])
+
+
+def _get_args():
+    parser = ArgumentParser()
+
+    parser.add_argument('-i', '--image_path', required=True)
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = _get_args()
+
+    enhancer = ImageEnhancer(args.image_path)
+
+    optimizer = ParameterOptimizer(partial(_image_to_score,
+                                           target_tuple=(150, 150, 150)),
+                                   enhancer)
+
+    param = optimizer.optimize()
+    image = enhancer.org_enhance(param)
+
+    _make_figure('histogram', np.array_split(image.histogram(), 3))
+
+    plt.figure()
+
+    plt.imshow(image)
+    plt.tick_params(labelbottom="off", bottom="off")  # x軸の削除
+    plt.tick_params(labelleft="off", left="off")
+
+    plt.show()

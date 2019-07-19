@@ -1,13 +1,14 @@
 from tkinter import Tk, LEFT
 from argparse import ArgumentParser
 from UserPreferencePredictor.Model.util \
-    import MODEL_TYPE_LIST, MODEL_BUILDER_DICT, PREDICTABLE
+    import MODEL_TYPE_LIST
+from UserPreferencePredictor.Model.Compare.ranknet import RankNet
+
 import sys
 from ImageEnhancer.image_enhancer import ImageEnhancer
 
 from ParameterOptimizer.optimizer import ParameterOptimizer
 from ParameterOptimizer.frame import SelectableCanvasFrame
-import tensorflow as tf
 
 
 def _get_args():
@@ -22,14 +23,26 @@ def _get_args():
 
 
 def _init_model(load_dir_path: str, model_type: str):
-    model = MODEL_BUILDER_DICT[model_type][PREDICTABLE](tf.Graph())
+    model = RankNet()
     try:
-        model.restore(load_dir_path)
+        model.load(load_dir_path)
     except ValueError:
         print('学習済みモデルをロードできなかったため終了します')
         sys.exit()
 
     return model
+
+
+def _show_histogram(image):
+    from Quantifier.Histogram.graphizer \
+        import make_histogram_figure, make_image_figure
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    make_histogram_figure('histogram', np.array_split(image.histogram(), 3))
+    make_image_figure('', image)
+
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -43,6 +56,9 @@ if __name__ == "__main__":
 
     optimizer = ParameterOptimizer(model, image_enhancer)
     best_param_list = optimizer.optimize()
+
+    _show_histogram(image_enhancer.org_enhance(best_param_list[0]))
+    exit()
 
     root = Tk()
     root.title('optimizer')

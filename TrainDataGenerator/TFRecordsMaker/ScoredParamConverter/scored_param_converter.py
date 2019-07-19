@@ -1,15 +1,12 @@
-from tkinter import Tk
 from ImageEnhancer.image_enhancer import ImageEnhancer
 from ScoredParamIO.scored_param_reader import format_scored_param_file_list
-from TrainDataGenerator.TFRecordsMaker.util \
-    import get_dataset_save_dir
-
 from TrainDataGenerator.TFRecordsMaker.util import DATASET_TYPE_LIST
 from conpare import convert as compare_convert
 from regression import convert as regression_convert
 from UserPreferencePredictor.Model.util \
-    import set_model_type_args, MODEL_TYPE_LIST, ArgumentParser
+    import MODEL_TYPE_LIST
 from pathlib import Path
+from argparse import ArgumentParser
 
 
 def _get_args():
@@ -34,7 +31,8 @@ if __name__ == "__main__":
     image_enhancer = ImageEnhancer(args.image_path)
     scored_param_list = format_scored_param_file_list(args.param_paths)
 
-    assert Path(args.dataset_dir_path).is_dir()
+    if not Path(args.dataset_dir_path).is_dir():
+        raise NotADirectoryError
 
     rate_dict = \
         dict(zip(DATASET_TYPE_LIST, [0.7, 0.2, 0.1]))
@@ -44,5 +42,3 @@ if __name__ == "__main__":
 
     convert_func_dict[args.model_type](args.dataset_dir_path, image_enhancer,
                                        scored_param_list, rate_dict)
-
-    print('--- complete ! ---')

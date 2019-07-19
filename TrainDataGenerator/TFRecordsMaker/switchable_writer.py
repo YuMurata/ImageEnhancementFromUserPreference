@@ -6,7 +6,7 @@ from .util import TRAIN, DATASET_TYPE_LIST, EXTENSION
 class SwitchableWriter:
     def __init__(self, save_file_dir: str):
         self.writer_dict = \
-            {key: tf.python_io.TFRecordWriter(
+            {key: tf.io.TFRecordWriter(
                 str(Path(save_file_dir)/(key+EXTENSION)))
                 for key in DATASET_TYPE_LIST}
 

@@ -1,13 +1,8 @@
 from tkinter import filedialog, messagebox
-from datetime import datetime
-from pathlib import Path
 from TrainDataGenerator.TFRecordsMaker.util \
     import TRAINDATA_PATH
 
-from UserPreferencePredictor.Model.Compare.trainable_model \
-    import TrainableModel as compare_trainable
-from UserPreferencePredictor.Model.Compare.predictable_model \
-    import PredictableModel as compare_predictable
+from UserPreferencePredictor.Model.Compare.ranknet import RankNet
 
 from UserPreferencePredictor.Model.Regression.trainable_model \
     import TrainableModel as regression_trainable
@@ -47,7 +42,7 @@ USE_TYPE_LIST = (TRAINABLE, PREDICTABLE)
 
 COMPARE_MODEL_BUILDER_DICT = \
     dict(zip(USE_TYPE_LIST,
-             [compare_trainable,  compare_predictable]))
+             [RankNet]))
 
 REGRESSION_BUILDER_DICT = \
     dict(zip(USE_TYPE_LIST,

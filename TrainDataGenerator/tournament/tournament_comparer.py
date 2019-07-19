@@ -19,14 +19,16 @@ def _get_args():
     parser.add_argument('-s', '--save_file_path', required=True)
     parser.add_argument('-n', '--generate_num', required=True, type=int)
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    for arg in vars(args):
+        print(f'{str(arg)}: {str(getattr(args, arg))}')
+
+    return args
 
 
 if __name__ == "__main__":
     args = _get_args()
-
-    for arg in vars(args):
-        print(f'{str(arg)}: {str(getattr(args, arg))}')
 
     if args.generate_num < 2:
         raise ValueError('生成数は2以上にしてください')
@@ -57,5 +59,6 @@ if __name__ == "__main__":
 
     root.attributes('-topmost', True)
     root.lift()
+    root.focus_force()
 
     root.mainloop()

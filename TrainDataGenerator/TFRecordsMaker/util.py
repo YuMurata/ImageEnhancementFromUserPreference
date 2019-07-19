@@ -40,7 +40,8 @@ def get_dataset_save_dir():
 def make_dataset_path_dict(dataset_dir_path: str):
     dataset_dir_path = Path(dataset_dir_path)
 
-    assert dataset_dir_path.exists()
+    if not dataset_dir_path.exists():
+        raise FileNotFoundError('フォルダが見つかりませんでした')
 
     dataset_path_dict = \
         {key: str(dataset_dir_path/(key+EXTENSION))

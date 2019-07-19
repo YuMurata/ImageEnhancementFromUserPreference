@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from random import sample
-from logging import getLogger, ERROR
+from logging import getLogger, INFO
 
 
 class GameException(Exception):
@@ -13,9 +13,12 @@ class GameWin(Enum):
 
 
 class TournamentGame:
-    def __init__(self, player_list: list):
+    def __init__(self, player_list: list, *, handler=None):
         self.logger = getLogger('Tournament')
-        self.logger.setLevel(ERROR)
+        self.logger.setLevel(INFO)
+
+        if handler is not None:
+            self.logger.addHandler(handler)
 
         self.scored_player_list = [
             {'score': 1, 'param': player} for player in player_list]
@@ -35,7 +38,14 @@ class TournamentGame:
         self.match_count = 0
 
         self.logger.debug('init')
+
+        self.logger.info(f'--- game start ---')
+
         self.logger.info(f'start {self.round_count}th round')
+        self.logger.info(
+            f'--- current player: {self.current_player_index_list} ---')
+        self.logger.info(
+            f'--- next player: {self.next_player_index_list} ---')
 
     def new_match(self):
         if self.is_match:
@@ -44,25 +54,29 @@ class TournamentGame:
         if self.is_complete:
             raise GameException('game is already over')
 
+        self.logger.info(f'--- new match start ---')
+
         if len(self.current_player_index_list) >= 2:
             self.left_player_index = self.current_player_index_list.pop()
             self.right_player_index = self.current_player_index_list.pop()
             self.is_match = True
 
             self.match_count += 1
-            self.logger.info(
-                f'start {self.round_count}-{self.match_count}th match')
 
             left_player = \
                 self.scored_player_list[self.left_player_index]['param']
             right_player = \
                 self.scored_player_list[self.right_player_index]['param']
 
-            self.logger.debug(f'left player: {left_player}')
-            self.logger.debug(f'right player: {right_player}')
+            self.logger.info(
+                f'--- left player: {self.left_player_index} ---')
+            self.logger.info(
+                f'--- right player: {self.right_player_index} ---')
+
             return left_player, right_player
 
         else:
+            self.logger.info(f'--- round complete ---')
             self.next_player_index_list.extend(self.current_player_index_list)
             self.current_player_index_list = \
                 sample(self.next_player_index_list,
@@ -72,7 +86,12 @@ class TournamentGame:
             self.match_count = 0
 
             self.logger.info(f'start {self.round_count}th round')
-            return self.new_match()
+            self.logger.info(
+                f'--- current player: {self.current_player_index_list} ---')
+            self.logger.info(
+                f'--- next player: {self.next_player_index_list} ---')
+
+        return self.new_match()
 
     def compete(self, winner: GameWin):
         if not self.is_match:
@@ -85,10 +104,10 @@ class TournamentGame:
             self.scored_player_list[self.left_player_index]['score'] *= 2
             self.next_player_index_list.append(self.left_player_index)
         else:
-            self.scored_player_list[self.right_player_index]['score']
+            self.scored_player_list[self.right_player_index]['score'] *= 2
             self.next_player_index_list.append(self.right_player_index)
 
-        self.logger.info(f'winner: {winner.name}')
+        self.logger.info(f'--- winner: {winner.name} ---')
         self.is_match = False
 
         is_no_current_player = len(self.current_player_index_list) == 0

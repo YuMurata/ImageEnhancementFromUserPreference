@@ -4,11 +4,12 @@ from tkinter import Tk, LEFT, Frame, Label, LabelFrame
 from ImageEnhancer.image_enhancer import ImageEnhancer
 
 from UserPreferencePredictor.Model.util \
-    import MODEL_BUILDER_DICT, PREDICTABLE, MODEL_TYPE_LIST
+    import MODEL_TYPE_LIST
+
+from UserPreferencePredictor.Model.Compare.ranknet import RankNet
 from ScoredParamIO.scored_param_reader import read_scored_param
 
 from argparse import ArgumentParser
-import tensorflow as tf
 
 
 class EvaluatedCanvasFrame(Frame):
@@ -42,10 +43,10 @@ if __name__ == "__main__":
 
     model_type = args.model_type
 
-    predict_model = MODEL_BUILDER_DICT[model_type][PREDICTABLE](tf.Graph())
+    predict_model = RankNet()
 
     try:
-        predict_model.restore(args.load_dir_path)
+        predict_model.load(args.load_dir_path)
     except ValueError:
         print('ロードができなかったため終了します')
         exit()
@@ -59,7 +60,7 @@ if __name__ == "__main__":
             'score': scored_param['score']}
          for scored_param in scored_param_list]
 
-    evaluate_list = predict_model.predict_evaluate(data_list).tolist()
+    evaluate_list = predict_model.predict(data_list)
 
     for i in range(len(data_list)):
         data_list[i]['evaluate'] = evaluate_list[i][0]
