@@ -3,12 +3,13 @@ from config.train import summary_dir_path_dict
 from pathlib import Path
 from ImageEnhancer.image_enhancer import ImageEnhancer
 from config.image import image_path_dict
-from config.result import result_dir_path_dict
+from config.result import result_dir_path_dict, param_type_list
 from config.param import param_path_dict
 import json
 from ScoredParamIO.scored_param_reader import read_scored_param
 from ImageEnhancer.enhance_definer import enhance_name_list
 import math
+from SSIM_PIL import compare_ssim
 
 
 def find_best_train_param():
@@ -54,24 +55,35 @@ if __name__ == "__main__":
         result_dir_path = Path(result_dir_path_dict[image_name])
         result_dir_path.mkdir(parents=True, exist_ok=True)
 
-        enhancer = enhancer_dict[image_name]
-        enhancer.org_enhance(optimized_param).save(
-            str(result_dir_path/'optimize.png'))
-        enhancer.org_enhance(best_train_param).save(
-            str(result_dir_path/'train_dataset.png'))
-        enhancer.org_enhance(target_param).save(
-            str(result_dir_path/'target.png'))
-
         param_dict = {
             'optimize': optimized_param,
             'target': target_param,
             'train_dataset': best_train_param
         }
 
+        enhancer = enhancer_dict[image_name]
+        image_dict = {}
+        for param_type in param_type_list:
+            image_dict[param_type] = enhancer.org_enhance(
+                param_dict[param_type])
+            image_dict[param_type].save(
+                str(result_dir_path/(param_type+'.png')))
+
+        param_error_dict = {
+            'optimize-target': calc_error(optimized_param, target_param),
+            'optimize-train': calc_error(optimized_param, best_train_param),
+        }
+
+        ssim_error_dict = {
+            'optimize-target': compare_ssim(image_dict['optimize'], image_dict['target']),
+            'optimize-train': compare_ssim(image_dict['optimize'], image_dict['train_dataset'])
+        }
         write_data = {
             'param': param_dict,
-            'optimize-target_error': calc_error(optimized_param, target_param),
-            'optimize-train_error': calc_error(optimized_param, best_train_param),
+            'error': {
+                'param': param_error_dict,
+                'ssim': ssim_error_dict
+            }
         }
 
         with open(str(result_dir_path/'data.json'), 'w') as fp:
