@@ -80,19 +80,18 @@ def _get_args():
     return args
 
 
-if __name__ == "__main__":
-    args = _get_args()
-
-    image_enhancer = ImageEnhancer(args.image_path)
+def main(image_path: str, train_param_path: str, validation_param_path: str,
+         save_dir_path: str):
+    image_enhancer = ImageEnhancer(image_path)
 
     dataset_type_list = ['train', 'validation']
 
     param_list_dict = {key: read_scored_param(param_file_path)
                        for key, param_file_path
-                       in zip(dataset_type_list, (args.train_param_path,
-                                                  args.validation_param_path))}
+                       in zip(dataset_type_list, (train_param_path,
+                                                  validation_param_path))}
 
-    save_dir_path = Path(args.save_dir_path)
+    save_dir_path = Path(save_dir_path)
     save_dir_path.mkdir(parents=True, exist_ok=True)
 
     extension = '.tfrecords'
@@ -105,3 +104,8 @@ if __name__ == "__main__":
     print('\n')
 
     print('--- complete ! ---')
+
+
+if __name__ == "__main__":
+    args = _get_args()
+    main(**args)

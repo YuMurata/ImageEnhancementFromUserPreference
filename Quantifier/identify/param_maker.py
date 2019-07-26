@@ -34,32 +34,36 @@ def _get_args():
     return args
 
 
-if __name__ == "__main__":
-    args = _get_args()
-    if args.generate_num < 2:
+def main(generate_num: int, save_file_path: str, target_param: float):
+    if generate_num < 2:
         raise ValueError('生成数は2以上にしてください')
 
-    if not Path(args.save_file_path).parent.exists():
+    if not Path(save_file_path).parent.exists():
         raise ValueError('フォルダが存在しません')
 
-    if Path(args.save_file_path).suffix != '.csv':
+    if Path(save_file_path).suffix != '.csv':
         raise ValueError('拡張子はcsvにしてください')
 
     stream_handler = StreamHandler()
     stream_handler = None
 
     image_param_list = generate_image_parameter_list(enhance_name_list,
-                                                     args.generate_num)
+                                                     generate_num)
 
     game = TournamentGame(image_param_list, handler=stream_handler)
 
     while not game.is_complete:
         left_param, right_param = game.new_match()
 
-        left_score = param_to_score(left_param, args.target_param)
-        right_score = param_to_score(right_param, args.target_param)
+        left_score = param_to_score(left_param, target_param)
+        right_score = param_to_score(right_param, target_param)
 
         winner = GameWin.LEFT if left_score > right_score else GameWin.RIGHT
         game.compete(winner)
 
-    write_scored_param(game.scored_player_list, args.save_file_path)
+    write_scored_param(game.scored_player_list, save_file_path)
+
+
+if __name__ == "__main__":
+    args = _get_args()
+    main(**args)

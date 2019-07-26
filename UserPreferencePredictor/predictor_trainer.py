@@ -39,27 +39,28 @@ def _get_args():
     return args
 
 
-if __name__ == "__main__":
-    args = _get_args()
-
-    model_type = args.model_type
-
+def main(model_type: str, summary_dir_path: str, load_dir_path: str, dataset_dir_path: str):
     batch_size = 100 if model_type == COMPARE else 10
-    log_dir_path = _make_summary_dir(args.summary_dir_path)
+    log_dir_path = _make_summary_dir(summary_dir_path)
 
     trainable_model = RankNet()
 
-    if args.load_dir_path:
+    if load_dir_path:
         try:
-            trainable_model.load(args.load_dir_path)
+            trainable_model.load(load_dir_path)
         except ValueError:
             pass
 
-    dataset_path_dict = make_dataset_path_dict(args.dataset_dir_path)
+    dataset_path_dict = make_dataset_path_dict(dataset_dir_path)
     dataset = {key: make_dataset(dataset_path_dict[key], batch_size, key)
                for key in [TRAIN, VALIDATION]}
 
     trainable_model.train(dataset[TRAIN], log_dir_path=log_dir_path,
-                          valid_dataset=dataset[VALIDATION], epochs=10)
+                          valid_dataset=dataset[VALIDATION], epochs=30)
 
     trainable_model.save(log_dir_path)
+
+
+if __name__ == "__main__":
+    args = _get_args()
+    main(**args)
