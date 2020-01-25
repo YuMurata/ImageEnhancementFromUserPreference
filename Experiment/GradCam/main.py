@@ -18,11 +18,10 @@ if __name__ == "__main__":
         ranknet.load(weight_path)
 
         for image_path in category_dir.iterdir():
-            image_array = np.array(Image.open(str(image_path)))
+            image_array = np.array(Image.open(str(image_path)).convert('RGB'))
             cam = ranknet.grad_cam.get_cam(image_array, 'conv2d_1')
-
 
             save_dir = gradcam_dir_path / category_name
             save_dir.mkdir(exist_ok=True)
             image_name = image_path.stem
-            Image.fromarray(cam).save(str(save_dir/ f'{image_name}.png'))
+            Image.fromarray(cam).save(str(save_dir / f'{image_name}.png'))
