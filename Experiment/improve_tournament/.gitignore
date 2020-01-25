@@ -1,0 +1,5 @@
+grad_cam/
+optimize/
+scored_param/
+tfrecords/
+weights/
