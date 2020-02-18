@@ -1,0 +1,12 @@
+[submodule "IEFUP/submodule/ImageRankNet"]
+	path = IEFUP/submodule/ImageRankNet
+	url = https://github.com/YuMurata/ImageRankNet.git
+[submodule "IEFUP/submodule/ParameterOptimizer"]
+	path = IEFUP/submodule/ParameterOptimizer
+	url = https://github.com/YuMurata/ParameterOptimizer.git
+[submodule "gdrive_scripts"]
+	path = gdrive_scripts
+	url = https://github.com/YuMurata/gdrive_scripts.git
+[submodule "IEFUP/submodule/Tournament"]
+	path = IEFUP/submodule/Tournament
+	url = https://github.com/YuMurata/Tournament.git
