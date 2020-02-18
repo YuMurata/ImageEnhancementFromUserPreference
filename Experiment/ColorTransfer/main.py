@@ -3,7 +3,7 @@ import cv2
 from IEFUP.submodule import ImageRankNet
 from IEFUP.ImageRankNet.mycnn import MyCNN
 from IEFUP.Optimize \
-    import EnhanceGenerator, EnhanceDecorder, Predictor, Optimizer
+    import EnhanceGenerator, EnhanceDecorder, Predictor, ParameterOptimizer
 from pathlib import Path
 import pickle
 from gdrive_scripts import config
@@ -19,14 +19,17 @@ if __name__ == "__main__":
         weight_path = weights_dir_path / f'{category_name}.h5'
 
         for image_path in category_dir_path.iterdir():
+            print(f'optimize {image_path.name} in {category_name}')
 
             generator = EnhanceGenerator(
                 str(image_path), config.ImageInfo.size)
             enhance_decoder = EnhanceDecorder()
 
-            predictor = Predictor(config.ImageInfo.shape, str(weight_path))
+            predictor = Predictor(str(weight_path))
 
-            optimizer = Optimizer(predictor, generator, enhance_decoder)
+            optimizer = \
+                ParameterOptimizer.Optimizer(predictor, generator,
+                                             enhance_decoder)
             best_param_list, logbook = optimizer.optimize(
                 ngen=20, param_list_num=1)
 
@@ -47,4 +50,4 @@ if __name__ == "__main__":
             target = cv2.imread(str(target_dir_path / f'{category_name}.png'))
             cv2.imwrite(
                 str(transfer_dir_path / f'{image_name}.png'),
-                color_transfer(optimizable, target))
+                color_transfer(target, optimizable))
