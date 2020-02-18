@@ -10,3 +10,6 @@
 [submodule "IEFUP/submodule/Tournament"]
 	path = IEFUP/submodule/Tournament
 	url = https://github.com/YuMurata/Tournament.git
+[submodule "Experiment/ColorTransfer/color_transfer"]
+	path = Experiment/ColorTransfer/color_transfer
+	url = https://github.com/jrosebr1/color_transfer.git
