@@ -23,7 +23,7 @@ def get_save_dir_path(root_dir_path: Path, user_name: str, image_name: str) -> s
     return str(dir_path)
 
 
-def get_save_file_path(save_dir_path: str, save_file_name: str):
+def get_save_file_path(save_dir_path: str, save_file_name: str) -> str:
     save_dir_path = Path(save_dir_path)
     save_dir_path.mkdir(exist_ok=True, parents=True)
 

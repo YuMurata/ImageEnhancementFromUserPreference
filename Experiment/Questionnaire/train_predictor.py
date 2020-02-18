@@ -1,7 +1,8 @@
-import UserPreferencePredictor.Model.Compare.train as compare_train
+import UserPreferencePredictor as upp
 from argparse import ArgumentParser
 
 from config.path import root_summary_dir_path
+from config.dataset import IMAGE_SHAPE
 from misc import get_save_dir_path, MiscException
 
 
@@ -24,13 +25,15 @@ def _get_args():
     return args
 
 
-def train(user_name: str, image_name: str, tfrecords_dir_path: str):
+def train(user_name: str, image_name: str, tfrecords_dir_path: str, *, epochs: int = None):
     try:
-        summary_dir_path = get_save_dir_path(
-            root_summary_dir_path, user_name, image_name)
+        def get_summary_dir_path_func():
+            return get_save_dir_path(
+                root_summary_dir_path, user_name, image_name)
 
-        compare_train.train(summary_dir_path, tfrecords_dir_path)
-    except (MiscException, compare_train.TrainModelException) as e:
+        upp.Model.train_model(
+            get_summary_dir_path_func, tfrecords_dir_path, IMAGE_SHAPE, epochs=epochs)
+    except (MiscException, upp.Model.TrainModelException) as e:
         raise TrainPredictorException(e)
 
 

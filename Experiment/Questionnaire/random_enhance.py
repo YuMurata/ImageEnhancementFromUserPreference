@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from TrainDataGenerator.image_parameter_generator import generate_image_parameter_list
-from ImageEnhancer.image_enhancer import ImageEnhancer
-from ImageEnhancer.enhance_definer import enhance_name_list
+from UserPreferencePredictor.TrainDataMaker.image_parameter_generator import generate_image_parameter_list
+from IEFUP.ImageEnhancer import ImageEnhancer
+from IEFUP.ImageEnhancer import enhance_name_list
 from tqdm import tqdm
 
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     if not image_path.exists():
         raise FileNotFoundError
 
-    enhancer = ImageEnhancer(str(image_path))
+    enhancer = ImageEnhancer(str(image_path), (100, 100))
 
     save_dir_path = output_dir_path/f'random_enhance_{args.generate_num}'
     save_dir_path.mkdir(exist_ok=True, parents=True)

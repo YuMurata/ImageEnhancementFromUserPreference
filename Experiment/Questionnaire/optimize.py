@@ -1,16 +1,20 @@
 from argparse import ArgumentParser
-from ParameterOptimizer.main import optimize, show_optimized_images
-from ImageEnhancer.image_enhancer import ImageEnhancer
+from UserPreferencePredictor.Model import RankNet
+from UserPreferencePredictor.PreferenceOptimizer import Optimizer
+from IEFUP.ImageEnhancer import ResizableEnhancer
 from config.path import root_optimize_dir_path, root_image_dir_path
+from config.dataset import IMAGE_SHAPE, IMAGE_SIZE
 from misc import get_save_dir_path, Path, get_save_file_path
+from IEFUP.Optimize import EnhanceGenerator, EnhanceDecorder
 import matplotlib.pyplot as plt
 import json
+from pathlib import Path
 
 
 def _get_args():
     parser = ArgumentParser()
 
-    parser.add_argument('-l', '--model_load_dir_path', required=True)
+    parser.add_argument('-w', '--weights_file_path', required=True)
     parser.add_argument('-i', '--image_name', required=True)
     parser.add_argument('-n', '--image_number', required=True)
     parser.add_argument('-u', '--user_name', required=True)
@@ -55,7 +59,6 @@ def make_graph(log_file_path: str, log_dir_path: str):
     plt.savefig(str(save_file_path))
 
 
-
 if __name__ == "__main__":
     args = _get_args()
 
@@ -65,16 +68,13 @@ if __name__ == "__main__":
     image_dir = root_image_dir_path/args.image_name/args.image_number
     image_path = list(image_dir.glob('*.*'))[0]
 
-    enhancer = ImageEnhancer(str(image_path))
-    best_param_list, logbook = optimize(
-        args.model_load_dir_path, 'compare', enhancer, 100)
+    enhancer = ResizableEnhancer(str(image_path), IMAGE_SIZE)
 
-    log_dir_path = Path(optimize_dir_path)/'log'
-    log_dir_path.mkdir(exist_ok=True, parents=True)
+    model = RankNet(IMAGE_SHAPE)
+    model.load(args.weights_file_path)
+    image_generator = EnhanceGenerator(enhancer)
+    best_param_list, _ = Optimizer(model, image_generator, EnhanceDecorder()).optimize(20)
 
-    make_log(logbook, str(log_dir_path))
-
-    log_file_path = get_save_file_path(log_dir_path, 'fitness.json')
-    make_graph(log_file_path, str(log_dir_path))
-
-    show_optimized_images(enhancer, best_param_list, optimize_dir_path)
+    for index, best_param in enumerate(best_param_list):
+        save_path = str(Path(optimize_dir_path)/f'best_{index}.png')
+        enhancer.enhance(best_param).save(save_path)
