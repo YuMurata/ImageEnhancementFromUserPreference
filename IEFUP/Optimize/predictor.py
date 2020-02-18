@@ -1,9 +1,10 @@
-from IEFUP.submodule import PredictModel, RankNet
+from IEFUP.submodule import ParameterOptimizer, ImageRankNet
+from IEFUP.ImageRankNet.mycnn import MyCNN
 
 
-class Predictor(PredictModel):
-    def __init__(self, image_shape: tuple, weight_path: str):
-        self.model = RankNet(image_shape)
+class Predictor(ParameterOptimizer.PredictModel):
+    def __init__(self, weight_path: str):
+        self.model = ImageRankNet.RankNet(MyCNN())
         self.model.load(weight_path)
 
     def predict(self, image):

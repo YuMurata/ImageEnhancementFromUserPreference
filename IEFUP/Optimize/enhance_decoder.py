@@ -1,9 +1,9 @@
-from IEFUP.submodule import BitDecoder
+from IEFUP.submodule import ParameterOptimizer
 import numpy as np
 import IEFUP.ImageEnhancer as IE
 
 
-class EnhanceDecorder(BitDecoder):
+class EnhanceDecorder(ParameterOptimizer.BitDecoder):
     def decode(self, bit_list: list):
         quantize_param_list = \
             np.array_split(bit_list, len(IE.enhance_name_list))
