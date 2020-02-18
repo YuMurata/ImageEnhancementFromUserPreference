@@ -1,31 +1,36 @@
-from PreferenceOptimizer import ParameterOptimizer
-from UserPreferencePredictor.Model import RankNet
-import config
+from IEFUP.submodule import ParameterOptimizer
 from IEFUP.ImageEnhancer import ResizableEnhancer
-from IEFUP.Optimize import EnhanceGenerator, EnhanceDecorder
+from IEFUP.Optimize import EnhanceGenerator, EnhanceDecorder, Predictor
 from pathlib import Path
+from gdrive_scripts import config
 
 
 if __name__ == "__main__":
-    enhance_decoder = EnhanceDecorder()
+    optimizable_dir_path = Path(__file__).parent / 'optimizable'
+    weights_dir_path = Path(__file__).parent / 'weights'
+    optimize_dir_path = Path(__file__).parent / 'optimize'
 
-    cnn = RankNet(config.IMAGE_SHAPE, use_vgg16=False)
+    for category_name in ['farm', 'flower', 'katsudon', 'waterfall']:
+        weight_file_path = str(weights_dir_path / f'{category_name}.h5')
 
-    weights_path = r'C:\Users\init\Documents\PythonScripts\ImageEnhancementFromUserPreference\Experiment\AdditionalLearning\weights\16-0.28-0.22.h5'
-    cnn.load(weights_path)
+        for image_file_path in optimizable_dir_path.iterdir():
+            image_name = image_file_path.stem
+            print(f'optimize {image_name} in {category_name}')
 
-    optimize_dir_path = Path(r'C:\Users\init\Documents\PythonScripts\ImageEnhancementFromUserPreference\Experiment\AdditionalLearning\optimize')
+            generator = EnhanceGenerator(
+                str(image_file_path), config.ImageInfo.size)
+            enhance_decoder = EnhanceDecorder()
 
-    for image_name, path_list in config.image_path_dict.items():
-        for index, image_path in enumerate(path_list):
-            enhancer = ResizableEnhancer(image_path, config.IMAGE_SIZE)
-            enhance_generator = EnhanceGenerator(enhancer)
+            predictor = Predictor(str(weight_file_path))
 
-            cnn_best_param_list, _ = ParameterOptimizer(
-                cnn, enhance_generator, enhance_decoder).optimize(ngen=10)
+            optimizer = \
+                ParameterOptimizer.Optimizer(predictor, generator,
+                                             enhance_decoder)
+            best_param_list, logbook = optimizer.optimize(
+                ngen=20, param_list_num=1)
 
-            save_dir_path = optimize_dir_path/image_name/str(index)
-            save_dir_path.mkdir(parents=True, exist_ok=True)
-            for index, best_param in enumerate(cnn_best_param_list):
-                save_path = str(save_dir_path/f'best_{index}.png')
-                enhancer.enhance(best_param).save(save_path)
+            save_dir_path = optimize_dir_path / category_name
+            save_dir_path.mkdir(exist_ok=True)
+
+            enhance_path = str(save_dir_path / f'{image_name}.png')
+            generator.enhancer.enhance(best_param_list[0]).save(enhance_path)
