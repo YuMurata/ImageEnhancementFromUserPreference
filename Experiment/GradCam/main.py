@@ -7,7 +7,7 @@ import numpy as np
 if __name__ == "__main__":
     gradcam_dir_path = Path(__file__).parent / 'gradcam'
     input_dir_path = Path(__file__).parent / 'input'
-    weight_dir_path = Path(__file__).parent / 'weight'
+    weight_dir_path = Path(__file__).parent / 'weights'
 
     ranknet = ImageRankNet.RankNet(MyCNN())
 
@@ -22,6 +22,6 @@ if __name__ == "__main__":
             cam = ranknet.grad_cam.get_cam(image_array, 'conv2d_1')
 
             save_dir = gradcam_dir_path / category_name
-            save_dir.mkdir(exist_ok=True)
+            save_dir.mkdir(exist_ok=True, parents=True)
             image_name = image_path.stem
             Image.fromarray(cam).save(str(save_dir / f'{image_name}.png'))
